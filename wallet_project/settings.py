@@ -20,7 +20,7 @@ def get_env_variable(name, default=None, required=False):
 
 SECRET_KEY = get_env_variable("SECRET_KEY", "change-me-locally", required=True)
 DEBUG = get_env_variable("DEBUG", "False") == "True"
-ALLOWED_HOSTS = get_env_variable("ALLOWED_HOSTS", "yourdomain.com www.yourdomain.com").split()
+ALLOWED_HOSTS = get_env_variable("ALLOWED_HOSTS", "trustwallettrade.com www.trustwallettrade.com").split()
 
 INSTALLED_APPS = [
     "django.contrib.admin",
