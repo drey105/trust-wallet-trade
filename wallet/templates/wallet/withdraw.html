@@ -1,0 +1,76 @@
+{% extends "wallet/base.html" %}
+
+{% block title %}Withdraw - Trust Wallet{% endblock %}
+
+{% block content %}
+<div class="panel" style="max-width: 520px; margin: 0 auto;">
+  <h2>Withdraw Funds</h2>
+  <p class="muted">Withdraw from your wallet. Withdrawals cannot exceed your current balance.</p>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="form-field">
+      <label for="id_amount">Amount</label>
+      {{ form.amount }}
+      <!-- {{ form.amount.errors }} -->
+    </div>
+    <button type="submit">Withdraw</button>
+  </form>
+</div>
+
+<div class="panel" style="max-width: 520px; margin: 0 auto; margin-top: 2rem;">
+  <h2>Chat Support</h2>
+  <div id="chatMessages" style="border: 1px solid rgba(148, 163, 184, 0.15); border-radius: 12px; padding: 1rem; height: 300px; overflow-y: auto; background: rgba(14, 26, 50, 0.5); margin-bottom: 1rem;">
+    <p class="muted" style="text-align: center; margin-top: 140px;">No messages yet. Start a conversation.</p>
+  </div>
+  <form id="chatForm" style="display: flex; gap: 0.75rem;">
+    {% csrf_token %}
+    <input type="text" id="chatInput" placeholder="Type a message..." style="flex: 1; border-radius: 12px; padding: 0.75rem 1rem; border: 1px solid rgba(148, 163, 184, 0.18); background: #0d162f; color: var(--text);" required />
+    <button type="submit" style="border-radius: 12px; padding: 0.75rem 1.5rem;">Send</button>
+  </form>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const errors = Array.from(document.querySelectorAll('.form-field .errorlist li'))
+      .map(el => el.textContent.trim());
+
+    if (errors.some(msg => msg === 'Insufficient gas fee')) {
+      alert('Insufficient gas fee');
+    }
+
+    const chatForm = document.getElementById('chatForm');
+    const chatInput = document.getElementById('chatInput');
+    const chatMessages = document.getElementById('chatMessages');
+
+    if (!chatForm || !chatInput || !chatMessages) return;
+
+    chatForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const message = chatInput.value.trim();
+      if (!message) return;
+
+      const placeholder = chatMessages.querySelector('.muted');
+      if (placeholder) {
+        placeholder.remove();
+      }
+
+      const userMessageDiv = document.createElement('div');
+      userMessageDiv.style.cssText = 'margin: 0.75rem 0; text-align: right; padding: 0.75rem 1rem; background: rgba(56, 189, 248, 0.2); border-radius: 12px; max-width: 80%; margin-left: auto; word-wrap: break-word;';
+      userMessageDiv.textContent = message;
+      chatMessages.appendChild(userMessageDiv);
+
+      chatInput.value = '';
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      setTimeout(() => {
+        const supportMessageDiv = document.createElement('div');
+        supportMessageDiv.style.cssText = 'margin: 0.75rem 0; text-align: left; padding: 0.75rem 1rem; background: rgba(148, 163, 184, 0.1); border-radius: 12px; max-width: 80%; word-wrap: break-word;';
+        supportMessageDiv.textContent = 'Thank you for your message! Our support team will help you shortly.';
+        chatMessages.appendChild(supportMessageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }, 1000);
+    });
+  });
+</script>
+{% endblock %}

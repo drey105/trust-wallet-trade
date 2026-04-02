@@ -1,0 +1,23 @@
+{% extends "wallet/base.html" %}
+
+{% block title %}Login - Trust Wallet{% endblock %}
+
+{% block content %}
+<div class="panel" style="max-width: 520px; margin: 0 auto;">
+  <h2>Login to Wallet</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="form-field">
+      <label for="id_username">Username</label>
+      {{ form.username }}
+    </div>
+    <div class="form-field">
+      <label for="id_password">Password</label>
+      {{ form.password }}
+    </div>
+    <button type="submit">Sign In</button>
+  </form>
+  <p class="muted" style="margin-top: 1rem;">New here? <a href="{% url 'wallet:register' %}">Create an account</a>.</p>
+</div>
+{% endblock %}

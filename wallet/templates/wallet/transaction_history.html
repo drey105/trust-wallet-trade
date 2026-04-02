@@ -1,0 +1,56 @@
+{% extends "wallet/base.html" %}
+
+{% block title %}{% if is_admin %}All Transaction{% else %}Deposit{% endif %} History - Trust Wallet{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <h2>{% if is_admin %}All System{% else %}Your{% endif %} {% if is_admin %}Transaction{% else %}Deposit{% endif %} History</h2>
+  <p class="muted" style="margin-bottom: 1.5rem;">
+    {% if is_admin %}
+      View all transactions from every user in the system.
+    {% else %}
+      View your personal deposit transactions below.
+    {% endif %}
+  </p>
+  {% if transactions %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          {% if is_admin %}<th>User</th>{% endif %}
+          <th>Type</th>
+          <th>Amount</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for transaction in transactions %}
+          <tr>
+            <td>{{ transaction.created_at|date:"M d, Y H:i" }}</td>
+            {% if is_admin %}<td>{{ transaction.wallet.user.username }}</td>{% endif %}
+            <td><span class="chip {{ transaction.transaction_type }}">{{ transaction.get_transaction_type_display }}</span></td>
+            <td>${{ transaction.amount }}</td>
+            <td>{{ transaction.note|default:"—" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if is_paginated %}
+      <div style="display:flex; justify-content: space-between; margin-top: 1rem;">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        {% endif %}
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}">Next</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% else %}
+    {% if is_admin %}
+      <p class="muted">No transactions recorded yet in the system.</p>
+    {% else %}
+      <p class="muted">No deposits received yet. Your deposit history will appear once you deposit funds to your account.</p>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

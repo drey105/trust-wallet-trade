@@ -1,0 +1,320 @@
+{% extends "wallet/base.html" %}
+
+{% block title %}Dashboard - Trust Wallet{% endblock %}
+
+{% block content %}
+<div class="panel">
+  {% if user.is_authenticated %}
+    <h2>Welcome, {{ user.username }}</h2>
+    <p class="muted">Your secure wallet balance and recent transactions are shown below.</p>
+  {% else %}
+    <h2>Trading Dashboard</h2>
+    <p class="muted">View system-wide trading activity and transaction history.</p>
+  {% endif %}
+  <div class="grid card-row" style="margin-top: 1.5rem;">
+    {% if user.is_authenticated %}
+      <div class="panel" style="padding: 1.5rem;">
+        <h3>Wallet Balance</h3>
+        <p style="font-size: 2.75rem; margin: 0.75rem 0;">${{ wallet.balance }}</p>
+        <p class="muted">Last updated {{ wallet.updated_at|date:"M d, Y H:i" }}</p>
+      </div>
+      <div class="panel" style="padding: 1.5rem;">
+        <h3>Deposit Address</h3>
+        <p class="muted">Send deposits to the wallet below:</p>
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin: 1rem 0;">
+          <span id="depositAddress" style="font-weight: 700; word-break: break-all;">{{ deposit_address }}</span>
+          <button id="copyAddressBtn" type="button" style="border-radius: 999px; padding: 0.65rem 1rem; background: rgba(56, 189, 248, 0.18); color: var(--accent); border: 1px solid rgba(56, 189, 248, 0.3); cursor: pointer;">Copy</button>
+        </div>
+        <p class="muted">Use this address to top up your balance safely.</p>
+      </div>
+    {% else %}
+      <div class="panel" style="padding: 1.5rem;">
+        <h3>System Activity</h3>
+        <p class="muted">Total Transactions</p>
+        <p style="font-size: 2.75rem; margin: 0.75rem 0;">{{ all_transactions|length }}</p>
+      </div>
+      <div class="panel" style="padding: 1.5rem;">
+        <h3>Login to Trade</h3>
+        <p class="muted">Create your account to start trading:</p>
+        <a href="{% url 'wallet:login' %}" style="display: inline-block; margin: 1rem 0;"><button type="button">Login</button></a>
+        <p class="muted"><a href="{% url 'wallet:register' %}">Create Account</a></p>
+      </div>
+    {% endif %}
+    <!-- <div class="panel" style="padding: 1.5rem;">
+      <h3>Quick actions</h3>
+      <p>Use the links below to deposit or withdraw funds safely.</p>
+      {% if user.is_staff %}
+        <a href="{% url 'wallet:deposit' %}"><button type="button">Deposit Funds</button></a>
+      {% endif %}
+      <a href="{% url 'wallet:withdraw' %}"><button type="button">Withdraw Funds</button></a>
+    </div> -->
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Market Prices</h2>
+  <div id="pricesList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+    <div style="padding: 1rem; background: rgba(14, 26, 50, 0.5); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.15);">
+      <p class="muted">Bitcoin</p>
+      <p style="font-size: 1.5rem; margin: 0.5rem 0;"><span id="btc-price">$67,250</span></p>
+      <p class="muted" style="font-size: 0.85rem;"><span id="btc-change" style="color: var(--success);">+2.5%</span></p>
+    </div>
+    <div style="padding: 1rem; background: rgba(14, 26, 50, 0.5); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.15);">
+      <p class="muted">Ethereum</p>
+      <p style="font-size: 1.5rem; margin: 0.5rem 0;"><span id="eth-price">$3,420</span></p>
+      <p class="muted" style="font-size: 0.85rem;"><span id="eth-change" style="color: var(--success);">+1.8%</span></p>
+    </div>
+    <div style="padding: 1rem; background: rgba(14, 26, 50, 0.5); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.15);">
+      <p class="muted">Cardano</p>
+      <p style="font-size: 1.5rem; margin: 0.5rem 0;"><span id="ada-price">$1.12</span></p>
+      <p class="muted" style="font-size: 0.85rem;"><span id="ada-change" style="color: var(--danger);">-0.5%</span></p>
+    </div>
+    <div style="padding: 1rem; background: rgba(14, 26, 50, 0.5); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.15);">
+      <p class="muted">Ripple</p>
+      <p style="font-size: 1.5rem; margin: 0.5rem 0;"><span id="xrp-price">$2.45</span></p>
+      <p class="muted" style="font-size: 0.85rem;"><span id="xrp-change" style="color: var(--success);">+3.2%</span></p>
+    </div>
+    <div style="padding: 1rem; background: rgba(14, 26, 50, 0.5); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.15);">
+      <p class="muted">Solana</p>
+      <p style="font-size: 1.5rem; margin: 0.5rem 0;"><span id="sol-price">$165.30</span></p>
+      <p class="muted" style="font-size: 0.85rem;"><span id="sol-change" style="color: var(--success);">+4.1%</span></p>
+    </div>
+    <div style="padding: 1rem; background: rgba(14, 26, 50, 0.5); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.15);">
+      <p class="muted">Polkadot</p>
+      <p style="font-size: 1.5rem; margin: 0.5rem 0;"><span id="dot-price">$8.50</span></p>
+      <p class="muted" style="font-size: 0.85rem;"><span id="dot-change" style="color: var(--danger);">-1.3%</span></p>
+    </div>
+    <div style="padding: 1rem; background: rgba(14, 26, 50, 0.5); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.15);">
+      <p class="muted">Dogecoin</p>
+      <p style="font-size: 1.5rem; margin: 0.5rem 0;"><span id="doge-price">$0.4250</span></p>
+      <p class="muted" style="font-size: 0.85rem;"><span id="doge-change" style="color: var(--success);">+2.2%</span></p>
+    </div>
+    <div style="padding: 1rem; background: rgba(14, 26, 50, 0.5); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.15);">
+      <p class="muted">Litecoin</p>
+      <p style="font-size: 1.5rem; margin: 0.5rem 0;"><span id="ltc-price">$95.40</span></p>
+      <p class="muted" style="font-size: 0.85rem;"><span id="ltc-change" style="color: var(--success);">+1.5%</span></p>
+    </div>
+    <div style="padding: 1rem; background: rgba(14, 26, 50, 0.5); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.15);">
+      <p class="muted">Chainlink</p>
+      <p style="font-size: 1.5rem; margin: 0.5rem 0;"><span id="link-price">$28.50</span></p>
+      <p class="muted" style="font-size: 0.85rem;"><span id="link-change" style="color: var(--success);">+2.8%</span></p>
+    </div>
+    <div style="padding: 1rem; background: rgba(14, 26, 50, 0.5); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.15);">
+      <p class="muted">Bitcoin Cash</p>
+      <p style="font-size: 1.5rem; margin: 0.5rem 0;"><span id="bch-price">$525.80</span></p>
+      <p class="muted" style="font-size: 0.85rem;"><span id="bch-change" style="color: var(--danger);">-0.8%</span></p>
+    </div>
+    <div style="padding: 1rem; background: rgba(14, 26, 50, 0.5); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.15);">
+      <p class="muted">Polygon</p>
+      <p style="font-size: 1.5rem; margin: 0.5rem 0;"><span id="matic-price">$0.7850</span></p>
+      <p class="muted" style="font-size: 0.85rem;"><span id="matic-change" style="color: var(--success);">+5.3%</span></p>
+    </div>
+    <div style="padding: 1rem; background: rgba(14, 26, 50, 0.5); border-radius: 12px; border: 1px solid rgba(148, 163, 184, 0.15);">
+      <p class="muted">Avalanche</p>
+      <p style="font-size: 1.5rem; margin: 0.5rem 0;"><span id="avax-price">$52.20</span></p>
+      <p class="muted" style="font-size: 0.85rem;"><span id="avax-change" style="color: var(--success);">+3.6%</span></p>
+    </div>
+  </div>
+  <p class="muted" style="margin-top: 1rem; font-size: 0.85rem;">Prices updated in real-time. Last update: <span id="updateTime">Just now</span></p>
+</div>
+
+<div class="panel">
+  <h2>Trading Chart</h2>
+  <canvas id="transactionChart" style="max-height: 400px;"></canvas>
+</div>
+
+<div class="panel">
+  <h2>{% if user.is_authenticated %}Your {% endif %}Recent Transactions</h2>
+  {% if user.is_authenticated and not has_deposits %}
+    <p class="muted">No transactions yet. Your transaction history will appear once you deposit funds to your account.</p>
+  {% elif user.is_authenticated and recent_transactions %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Amount</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for transaction in recent_transactions %}
+          <tr>
+            <td>{{ transaction.created_at|date:"M d, Y H:i" }}</td>
+            <td><span class="chip {{ transaction.transaction_type }}">{{ transaction.get_transaction_type_display }}</span></td>
+            <td>${{ transaction.amount }}</td>
+            <td>{{ transaction.note|default:"—" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% elif not user.is_authenticated %}
+    <p class="muted">Login to view and manage your personal transaction history.</p>
+  {% else %}
+    <p class="muted">No transactions yet.</p>
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Update cryptocurrency prices with simulated live fluctuations
+  function updatePrices() {
+    const prices = {
+      'btc': { base: 67250, change: 2.5 },
+      'eth': { base: 3420, change: 1.8 },
+      'ada': { base: 1.12, change: -0.5 },
+      'xrp': { base: 2.45, change: 3.2 },
+      'sol': { base: 165.30, change: 4.1 },
+      'dot': { base: 8.50, change: -1.3 },
+      'doge': { base: 0.4250, change: 2.2 },
+      'ltc': { base: 95.40, change: 1.5 },
+      'link': { base: 28.50, change: 2.8 },
+      'bch': { base: 525.80, change: -0.8 },
+      'matic': { base: 0.7850, change: 5.3 },
+      'avax': { base: 52.20, change: 3.6 }
+    };
+
+    Object.keys(prices).forEach(key => {
+      const priceEl = document.getElementById(`${key}-price`);
+      const changeEl = document.getElementById(`${key}-change`);
+      const randomChange = (Math.random() - 0.5) * 2;
+      const newPrice = prices[key].base * (1 + randomChange / 100);
+      const newChange = prices[key].change + (Math.random() - 0.5);
+
+      if (priceEl) {
+        if (key === 'btc' || key === 'eth' || key === 'bch') {
+          priceEl.textContent = '$' + newPrice.toFixed(2);
+        } else {
+          priceEl.textContent = '$' + newPrice.toFixed(4);
+        }
+      }
+
+      if (changeEl) {
+        changeEl.textContent = newChange.toFixed(1) + '%';
+        changeEl.style.color = newChange >= 0 ? 'var(--success)' : 'var(--danger)';
+      }
+    });
+
+    document.getElementById('updateTime').textContent = new Date().toLocaleTimeString();
+  }
+
+  // Initialize prices on page load
+  document.addEventListener('DOMContentLoaded', function () {
+    updatePrices();
+    // Update prices every 10 seconds
+    setInterval(updatePrices, 10000);
+    
+    // Copy address button functionality
+    const copyButton = document.getElementById('copyAddressBtn');
+    const address = document.getElementById('depositAddress');
+
+    if (!copyButton || !address) return;
+
+    copyButton.addEventListener('click', async function () {
+      const textToCopy = address.textContent.trim();
+      if (!textToCopy) return;
+
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        copyButton.textContent = 'Copied!';
+        setTimeout(() => { copyButton.textContent = 'Copy'; }, 2000);
+      } catch (err) {
+        const textarea = document.createElement('textarea');
+        textarea.value = textToCopy;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        copyButton.textContent = 'Copied!';
+        setTimeout(() => { copyButton.textContent = 'Copy'; }, 2000);
+      }
+    });
+
+    // Trading Chart
+    const chartCanvas = document.getElementById('transactionChart');
+    if (!chartCanvas) return;
+
+    // Extract transaction data and calculate cumulative balance
+    const transactions = [
+      {% for transaction in all_transactions %}
+        { amount: parseFloat('{{ transaction.amount }}'), type: '{{ transaction.transaction_type }}', date: '{{ transaction.created_at|date:"M d, H:i" }}', user: '{{ transaction.wallet.user.username }}' },
+      {% endfor %}
+    ];
+
+    console.log('Transactions loaded:', transactions.length, transactions);
+
+    if (transactions.length === 0) {
+      chartCanvas.parentElement.innerHTML = '<p class="muted">No trading data to display yet.</p>';
+      return;
+    }
+
+    // Sort transactions by date (oldest first) and calculate running balance
+    transactions.reverse();
+    let cumulativeBalance = 0;
+    const dates = [];
+    const balanceData = [];
+
+    transactions.forEach(t => {
+      if (t.type === 'deposit') {
+        cumulativeBalance += t.amount;
+      } else {
+        cumulativeBalance -= t.amount;
+      }
+      dates.push(t.date.split(',')[0]); // Use date only
+      balanceData.push(Math.max(0, cumulativeBalance)); // Prevent negative balance display
+    });
+
+    const ctx = chartCanvas.getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: dates.length > 0 ? dates : ['No data'],
+        datasets: [{
+          label: '{% if user.is_authenticated %}Your Wallet{% else %}System Trading{% endif %} Balance ($)',
+          data: balanceData.length > 0 ? balanceData : [0],
+          borderColor: 'rgba(56, 189, 248, 1)',
+          backgroundColor: 'rgba(56, 189, 248, 0.1)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 5,
+          pointBackgroundColor: 'rgba(56, 189, 248, 1)',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            labels: {
+              color: 'rgba(226, 232, 240, 0.8)',
+              font: { size: 14, weight: 'bold' }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: 'rgba(226, 232, 240, 0.6)', font: { size: 11 } },
+            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+          },
+          y: {
+            ticks: { 
+              color: 'rgba(226, 232, 240, 0.6)',
+              font: { size: 11 },
+              callback: function(value) {
+                return '$' + value.toFixed(2);
+              }
+            },
+            grid: { color: 'rgba(148, 163, 184, 0.1)' },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}
